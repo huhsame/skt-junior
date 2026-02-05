@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>26 Junior Talent - Award Ceremony</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A1128;
+    --bg-dark: #050B1A;
+    --gold: #D4A843;
+    --gold-light: #E8C96A;
+    --gold-dark: #B8922E;
+    --white: #FFFFFF;
+    --navy: #0A1128;
+    --navy-light: #1B2845;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Playfair Display', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    cursor: none;
+  }
+
+  /* ── Scenes ── */
+  .scene {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+    z-index: 1;
+  }
+  .scene.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ── Canvas layers ── */
+  #particles {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── Scene 1: Idle ── */
+  #scene-idle {
+    z-index: 2;
+  }
+  #scene-idle video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .idle-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(10,17,40,0.3) 0%,
+      rgba(10,17,40,0.15) 40%,
+      rgba(10,17,40,0.5) 100%
+    );
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .logo-badge {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: var(--white);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid var(--gold);
+    box-shadow:
+      0 0 40px rgba(212,168,67,0.4),
+      0 0 80px rgba(212,168,67,0.15);
+    animation: logo-pulse 3s ease-in-out infinite, border-glow 2s ease-in-out infinite;
+    margin-bottom: 40px;
+  }
+  .logo-badge img {
+    width: 85%;
+    height: 85%;
+    object-fit: contain;
+    border-radius: 50%;
+  }
+
+  .title-shimmer {
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem;
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    background: linear-gradient(
+      120deg,
+      var(--gold-dark) 0%,
+      var(--gold-light) 25%,
+      var(--white) 50%,
+      var(--gold-light) 75%,
+      var(--gold-dark) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .subtitle {
+    font-size: 1.4rem;
+    color: rgba(212,168,67,0.7);
+    letter-spacing: 0.15em;
+    margin-bottom: 60px;
+    font-weight: 400;
+  }
+
+  .hint {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.2em;
+    animation: fade-pulse 2s ease-in-out infinite;
+    text-transform: uppercase;
+  }
+
+  /* ── Scene 2: CEO Video ── */
+  #scene-ceo {
+    z-index: 3;
+    background: #000;
+  }
+  #scene-ceo video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* ── Scene 3: Shuffle ── */
+  #scene-shuffle {
+    z-index: 4;
+    background: var(--bg);
+  }
+  .shuffle-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  .shuffle-container img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: none;
+  }
+  .shuffle-container img.shuffle-active {
+    opacity: 1;
+  }
+  .shuffle-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .drum-text {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--gold);
+    animation: drum-pulse 0.4s ease-in-out infinite;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 30px rgba(0,0,0,0.8), 0 0 60px rgba(0,0,0,0.5);
+  }
+
+  /* ── Scene 4: Celebration Video ── */
+  #scene-celebration {
+    z-index: 5;
+    background: #000;
+  }
+  #scene-celebration video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* ── Scene 5: Final Photo ── */
+  #scene-final {
+    z-index: 6;
+    background: var(--bg);
+  }
+  .final-photo-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .final-photo-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .final-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 60px;
+    z-index: 1;
+    background: linear-gradient(
+      180deg,
+      rgba(10,17,40,0) 0%,
+      rgba(10,17,40,0) 50%,
+      rgba(10,17,40,0.7) 100%
+    );
+  }
+  .final-congrats {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    text-shadow: 0 0 30px rgba(0,0,0,0.8), 0 4px 20px rgba(0,0,0,0.6);
+  }
+  .final-team {
+    font-size: 2rem;
+    color: var(--white);
+    margin-bottom: 24px;
+    text-shadow: 0 0 20px rgba(0,0,0,0.8);
+  }
+  .final-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--white);
+    padding: 6px;
+    border: 3px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .final-logo img {
+    width: 85%;
+    height: 85%;
+    object-fit: contain;
+    border-radius: 50%;
+  }
+
+  /* ── Animations ── */
+  @keyframes logo-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  @keyframes fade-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+  }
+  @keyframes border-glow {
+    0%, 100% { box-shadow: 0 0 40px rgba(212,168,67,0.4), 0 0 80px rgba(212,168,67,0.15); }
+    50% { box-shadow: 0 0 50px rgba(212,168,67,0.6), 0 0 100px rgba(212,168,67,0.25); }
+  }
+  @keyframes drum-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: 0.7; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Particle Canvas -->
+<canvas id="particles"></canvas>
+
+<!-- Scene 1: Idle -->
+<section id="scene-idle" class="scene active">
+  <video id="idle-video" muted autoplay loop playsinline>
+    <source src="photos/medal_showcase.mp4" type="video/mp4">
+  </video>
+  <div class="idle-overlay">
+    <div class="title-shimmer">Award Ceremony</div>
+    <div class="subtitle">26th Junior Talent</div>
+    <div class="hint">Press 1 &nbsp; 2 &nbsp; 3 &nbsp; 4</div>
+  </div>
+</section>
+
+<!-- Scene 2: CEO Video -->
+<section id="scene-ceo" class="scene">
+  <video id="ceo-video" playsinline>
+    <source src="photos/사장_우승발표.mp4" type="video/mp4">
+  </video>
+</section>
+
+<!-- Scene 3: Shuffle -->
+<section id="scene-shuffle" class="scene">
+  <div class="shuffle-container">
+    <img id="shuffle-1" src="photos/1조.jpg" alt="Team 1">
+    <img id="shuffle-2" src="photos/2조.jpg" alt="Team 2">
+    <img id="shuffle-3" src="photos/3조.jpg" alt="Team 3">
+    <img id="shuffle-4" src="photos/4조.jpg" alt="Team 4">
+  </div>
+  <div class="shuffle-overlay">
+    <div class="drum-text" id="drum-text">두구두구두구...</div>
+  </div>
+</section>
+
+<!-- Scene 4: Celebration Video -->
+<section id="scene-celebration" class="scene">
+  <video id="celebration-video" playsinline>
+    <source id="celebration-source" src="" type="video/mp4">
+  </video>
+</section>
+
+<!-- Scene 5: Final Photo -->
+<section id="scene-final" class="scene">
+  <div class="final-photo-container">
+    <img id="final-photo" src="" alt="Group Photo">
+  </div>
+  <div class="final-overlay">
+    <div class="final-congrats">축하합니다!</div>
+    <div class="final-team" id="final-team-text"></div>
+    <div class="final-logo">
+      <img src="photos/26 JT 후드 뒷면_네이비1.png" alt="Logo">
+    </div>
+  </div>
+</section>
+
+<!-- Preload Images -->
+<div style="display:none;" aria-hidden="true">
+  <img src="photos/1조.jpg"><img src="photos/2조.jpg">
+  <img src="photos/3조.jpg"><img src="photos/4조.jpg">
+  <img src="photos/1조_사장님포함.png"><img src="photos/2조_사장님포함.png">
+  <img src="photos/3조_사장님포함.png"><img src="photos/4조_사장님포함.png">
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── State Machine ──
+  const State = {
+    IDLE: 'IDLE',
+    CEO_VIDEO: 'CEO_VIDEO',
+    SHUFFLE: 'SHUFFLE',
+    CELEBRATION: 'CELEBRATION',
+    FINAL: 'FINAL'
+  };
+
+  let currentState = State.IDLE;
+  let isTransitioning = false;
+  let currentTeam = null;
+
+  // ── DOM References ──
+  const scenes = {
+    idle: document.getElementById('scene-idle'),
+    ceo: document.getElementById('scene-ceo'),
+    shuffle: document.getElementById('scene-shuffle'),
+    celebration: document.getElementById('scene-celebration'),
+    final: document.getElementById('scene-final')
+  };
+
+  const idleVideo = document.getElementById('idle-video');
+  const ceoVideo = document.getElementById('ceo-video');
+  const celebrationVideo = document.getElementById('celebration-video');
+  const celebrationSource = document.getElementById('celebration-source');
+
+  const finalPhoto = document.getElementById('final-photo');
+  const finalTeamText = document.getElementById('final-team-text');
+
+  const drumText = document.getElementById('drum-text');
+
+  const particlesCanvas = document.getElementById('particles');
+  const pCtx = particlesCanvas.getContext('2d');
+
+  // ── Utility ──
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function switchScene(sceneName) {
+    Object.values(scenes).forEach(s => s.classList.remove('active'));
+    scenes[sceneName].classList.add('active');
+  }
+
+  // ── Resize canvas ──
+  function resizeCanvas() {
+    particlesCanvas.width = window.innerWidth;
+    particlesCanvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  // ── Particle System (gold sparkles) ──
+  class ParticleSystem {
+    constructor(ctx, count) {
+      this.ctx = ctx;
+      this.particles = [];
+      for (let i = 0; i < count; i++) {
+        this.particles.push(this.createParticle());
+      }
+      this.animate = this.animate.bind(this);
+      this.running = true;
+      this.animate();
+    }
+
+    createParticle() {
+      return {
+        x: Math.random() * particlesCanvas.width,
+        y: Math.random() * particlesCanvas.height,
+        size: Math.random() * 2.5 + 0.5,
+        speedX: (Math.random() - 0.5) * 0.3,
+        speedY: (Math.random() - 0.5) * 0.3,
+        opacity: Math.random() * 0.5 + 0.1,
+        opacityDir: Math.random() > 0.5 ? 1 : -1,
+        hue: 40 + Math.random() * 15
+      };
+    }
+
+    animate() {
+      if (!this.running) return;
+      this.ctx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
+
+      for (const p of this.particles) {
+        p.x += p.speedX;
+        p.y += p.speedY;
+        p.opacity += p.opacityDir * 0.005;
+
+        if (p.opacity >= 0.7) p.opacityDir = -1;
+        if (p.opacity <= 0.05) p.opacityDir = 1;
+
+        if (p.x < 0 || p.x > particlesCanvas.width) p.speedX *= -1;
+        if (p.y < 0 || p.y > particlesCanvas.height) p.speedY *= -1;
+
+        this.ctx.beginPath();
+        this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        this.ctx.fillStyle = `hsla(${p.hue}, 70%, 60%, ${p.opacity})`;
+        this.ctx.fill();
+
+        this.ctx.beginPath();
+        this.ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+        this.ctx.fillStyle = `hsla(${p.hue}, 70%, 60%, ${p.opacity * 0.15})`;
+        this.ctx.fill();
+      }
+
+      requestAnimationFrame(this.animate);
+    }
+  }
+
+  // Start particles
+  const particleSystem = new ParticleSystem(pCtx, 50);
+
+  // ── Build Shuffle Sequence ──
+  function buildShuffleSequence(winnerTeam, steps) {
+    const teams = [1, 2, 3, 4];
+    const seq = [];
+    for (let i = 0; i < steps - 1; i++) {
+      let pick;
+      do {
+        pick = teams[Math.floor(Math.random() * teams.length)];
+      } while (seq.length > 0 && pick === seq[seq.length - 1]);
+      seq.push(pick);
+    }
+    seq.push(winnerTeam);
+    return seq;
+  }
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  // ── Video play helper with fallback ──
+  function playVideo(video, fallbackMs) {
+    return new Promise((resolve) => {
+      let resolved = false;
+      const done = () => {
+        if (resolved) return;
+        resolved = true;
+        video.removeEventListener('ended', done);
+        resolve();
+      };
+      video.addEventListener('ended', done);
+      video.currentTime = 0;
+      video.play().catch(() => {});
+      if (fallbackMs) {
+        setTimeout(done, fallbackMs);
+      }
+    });
+  }
+
+  // ── Main Ceremony Flow ──
+  async function startCeremony(teamNum) {
+    if (isTransitioning) return;
+    if (currentState !== State.IDLE) return;
+
+    isTransitioning = true;
+    currentTeam = teamNum;
+
+    // Phase 1: CEO Video
+    currentState = State.CEO_VIDEO;
+    idleVideo.pause();
+    switchScene('ceo');
+    await sleep(300);
+    await playVideo(ceoVideo, 120000);
+
+    // Phase 2: Shuffle (short & snappy — 12 steps)
+    currentState = State.SHUFFLE;
+    switchScene('shuffle');
+    await sleep(300);
+
+    const shuffleSteps = 12;
+    const sequence = buildShuffleSequence(teamNum, shuffleSteps);
+    const minDelay = 80;
+    const maxDelay = 400;
+    const shuffleImgs = [
+      document.getElementById('shuffle-1'),
+      document.getElementById('shuffle-2'),
+      document.getElementById('shuffle-3'),
+      document.getElementById('shuffle-4')
+    ];
+
+    for (let i = 0; i < sequence.length; i++) {
+      shuffleImgs.forEach(img => img.classList.remove('shuffle-active'));
+      shuffleImgs[sequence[i] - 1].classList.add('shuffle-active');
+
+      const t = i / (sequence.length - 1);
+      const eased = easeOutCubic(t);
+      const delay = minDelay + (maxDelay - minDelay) * eased;
+      await sleep(delay);
+    }
+
+    // Pause briefly on the winner photo
+    await sleep(800);
+
+    // Phase 3: Celebration Video (straight into it)
+    currentState = State.CELEBRATION;
+    celebrationSource.src = `photos/${teamNum}조_우승.mp4`;
+    celebrationVideo.load();
+    switchScene('celebration');
+    await sleep(300);
+    await playVideo(celebrationVideo, 120000);
+
+    // Phase 4: Final Photo
+    currentState = State.FINAL;
+    finalPhoto.src = `photos/${teamNum}조_사장님포함.png`;
+    finalTeamText.textContent = `${teamNum}조`;
+    switchScene('final');
+
+    // Auto-return to idle after 8 seconds
+    await sleep(8000);
+    resetToIdle();
+  }
+
+  // ── Reset to Idle ──
+  function resetToIdle() {
+    currentState = State.IDLE;
+    currentTeam = null;
+    isTransitioning = false;
+
+    ceoVideo.pause();
+    ceoVideo.currentTime = 0;
+    celebrationVideo.pause();
+    celebrationVideo.currentTime = 0;
+
+    document.querySelectorAll('.shuffle-container img').forEach(img => {
+      img.classList.remove('shuffle-active');
+    });
+
+    switchScene('idle');
+    idleVideo.play().catch(() => {});
+  }
+
+  // ── Keyboard Handler ──
+  document.addEventListener('keydown', (e) => {
+    if (currentState === State.IDLE && !isTransitioning) {
+      const num = parseInt(e.key);
+      if (num >= 1 && num <= 4) {
+        startCeremony(num);
+      }
+    }
+  });
+
+  // ── Double-click fullscreen ──
+  document.addEventListener('dblclick', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+
+  // ── Ensure idle video plays ──
+  idleVideo.play().catch(() => {});
+
+})();
+</script>
+</body>
+</html>
